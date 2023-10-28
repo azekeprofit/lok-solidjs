@@ -1,0 +1,16 @@
+.blackened {color:white;background:black; border-color:silver}
+
+table,tr {border:0; border-collapse:collapse}
+.cell {width:1.5em;height: 1.5em;cursor: pointer;}
+.cell input {width:1em}
+.hasContent {border:0.01px solid black;}
+
+textarea {font-family:"Lucida Console", Courier New, monospace; }
+
+select { width: 5em; height: 4ex; }
+
+.x-horizonthal {color:white;background:black; border-color:silver}
+.x-vertically {color:white;background:black; border-color:silver}
+.x-corner-up-left {color:white;background:black; border-color:silver}
+.x-corner-down-left {color:white;background:black; border-color:silver}
+.x-corner-down-right {color:white;background:black; border-color:silver}

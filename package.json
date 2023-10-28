@@ -1,0 +1,18 @@
+{
+  "name": "LOK",
+  "packageManager": "yarn@4.0.1",
+  "scripts": {
+    "build": "node ./cfg/build.js"
+  },
+  "dependencies": {
+    "babel-preset-solid": "^1.8.0",
+    "solid-js": "^1.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.6",
+    "esbuild": "^0.19.2",
+    "esbuild-plugin-solid": "^0.5.0",
+    "typescript": "^5.2.2",
+    "typescript-plugin-css-modules": "^5.0.1"
+  }
+}

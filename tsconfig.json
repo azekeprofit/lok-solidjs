@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "solid-js",
+    "lib":["ES2017","dom"],
+    "plugins": [{ "name": "typescript-plugin-css-modules" }]
+  }
+}
