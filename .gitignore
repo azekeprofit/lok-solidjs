@@ -1,7 +1,6 @@
-.vscode
-.yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
 !.yarn/releases
-!.yarn/sdks
-package-lock.json
-.pnp.cjs
-.pnp.loader.mjs
+!.yarn/versions
