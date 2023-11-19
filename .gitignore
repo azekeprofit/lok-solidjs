@@ -1,5 +1,7 @@
 .vscode
 .yarn
+!.yarn/releases
+!.yarn/sdks
 package-lock.json
 .pnp.cjs
 .pnp.loader.mjs
