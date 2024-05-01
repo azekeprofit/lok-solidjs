@@ -20,10 +20,13 @@ jobs:
     - run: corepack enable
     - run: yarn install
     - run: yarn run build
-    - name: upload
-      uses: actions/upload-artifact@v3
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        name: dist
-        path: |
-          dist
-          !dist/index.htm
+            # Upload dist folder
+            path: './dist'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
