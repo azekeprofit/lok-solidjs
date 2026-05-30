@@ -6,7 +6,7 @@ build({
   bundle: true,
   outfile: "dist/bundle.js",
   minify: true,
-  sourcemap: true,
+  sourcemap: false,
   loader: {
     ".svg": "dataurl",
   },

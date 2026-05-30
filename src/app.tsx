@@ -4,71 +4,108 @@ import { createStore, produce } from "solid-js/store";
 
 import "./style.css";
 
+
+const enum direction {
+  noDirection,
+  left,
+  right,
+  up,
+  down,
+  disconnected,
+}
+
+const enum UIMode {
+  pick1stLetter,
+  pick2ndLetter,
+  pickRestOfLetters,
+  pickOneBlock,
+  pickTwoBlocks,
+  pickTwoBlocks2nd,
+  blackenAllBlocksWithSameLetter,
+  solved,
+  markOneEmptyBlock,
+  inputLetter
+}
+
+enum crossed {
+  horizonthal,
+  vertical,
+  cornerUpLeft,
+  cornerUpRight,
+  cornerDownLeft,
+  cornerDownRight
+}
+
+
+const defaultStore = [
+  { num: 1, puzzle: "**\n**" },
+  { num: 2, puzzle: "KOL\n _" },
+  { num: 3, puzzle: "LKOL\nO  _\nK  _" },
+  { num: 4, puzzle: "_K\nLOK\nOL\nK" },
+  { num: 5, puzzle: "  L\n  O\n K_\nLOOK_\n L_\n  K" },
+  { num: 6, puzzle: "OLKOLKOK" },
+  { num: 7, puzzle: "K\nO_L_O_K\nKLOKO_L\nL" },
+  { num: 8, puzzle: "LOL\nO_O\nKOLOK\n  O\n  K" },
+  { num: 9, puzzle: "TLTLAKAK\n___\n_" },
+  { num: 10, puzzle: "  _ T\n  K L\n  A _\nKOL___L\n  T A\n    K" },
+  { num: 11, puzzle: "KTL\nLLK\nOAO_\nLKK_" },
+  { num: 12, puzzle: "  K\n __\nTLOAK\nKOL_\n KL" },
+  { num: 13, puzzle: " LOK\nTL_AK\n_KAL_T\nK___OL" },
+  { num: 14, puzzle: " _\n TT\nTLL\nLAA\nAKK\nKOL\n _" },
+  { num: 15, puzzle: " _K\nKALLT\nK_O_O_L\n LOK\n  L" },
+  { num: 16, puzzle: "  K\n  O_L\n  LOK\nTLAKOOK\n  L K" },
+  { num: 17, puzzle: "L      L\nTTLLAAKK\nOLOKOAKO\nK K K  K" },
+  { num: 18, puzzle: "TA\nUUU\nUUU" },
+  { num: 19, puzzle: " HHH\nTGTGA\n GAG" },
+  { num: 20, puzzle: "SALASOK\n   T" },
+  { num: 21, puzzle: "TE_A\nDT_A\nDETA\n" },
+  { num: 23, puzzle: "  TL\n  LO\nTLTAAK\n  AK\n  K" },
+  { num: 24, puzzle: "T_T_LAK\n_______\nTLALOK" },
+  { num: 25, puzzle: "   T\n  FLZD\nTLZAAK\n LOK\n" },
+  { num: 26, puzzle: "TLATLAKK\n   LOK\n   KALT" },
+  { num: 27, puzzle: "MJKKJ\nLOTAK\n DAAD\n  LLJ\n  TTD\n  M" },
+  { num: 28, puzzle: "LOXK" },
+  { num: 29, puzzle: "TLX\nKAX" },
+  { num: 30, puzzle: "L K\nXOXOK\n  L" },
+  { num: 32, puzzle: "  TX\nXK_L_T\nAXAX" },
+  { num: 33, puzzle: "    K\n TAKA\nX__AX\nLTLX\nT" },
+];
+
+function toKebabCase(str:string):string {
+  return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+}
+
+
+const labels:Record<UIMode, string> = {
+  [UIMode.pick1stLetter]: "start entering a spell",
+  [UIMode.pick2ndLetter]: "keep picking letters",
+  [UIMode.pickRestOfLetters]: "keep picking letters",
+  [UIMode.pickOneBlock]: "pick a cell to black out",
+  [UIMode.pickTwoBlocks]: "pick 2 cells to black out",
+  [UIMode.pickTwoBlocks2nd]: "pick 2nd cell adjacent to previous",
+  [UIMode.blackenAllBlocksWithSameLetter]:
+    "pick a cell, all cells with same letter will be blackened out",
+  [UIMode.solved]: "You solved it! Well done!",
+  [UIMode.markOneEmptyBlock]: "Mark one empty block",
+  [UIMode.inputLetter]: "Input a letter into selected block",
+};
+
+type spell = 'LOK' | 'TLAK' | 'TA' | 'BE';
+const spells:Record<spell,UIMode> = {
+  LOK: UIMode.pickOneBlock,
+  TLAK: UIMode.pickTwoBlocks,
+  TA: UIMode.blackenAllBlocksWithSameLetter,
+  BE: UIMode.markOneEmptyBlock,
+};
+
 export function App() {
 
-  enum direction {
-    noDirection,
-    left,
-    right,
-    up,
-    down,
-    disconnected,
-  }
-
-  enum UIMode {
-    pick1stLetter,
-    pick2ndLetter,
-    pickRestOfLetters,
-    pickOneBlock,
-    pickTwoBlocks,
-    pickTwoBlocks2nd,
-    blackenAllBlocksWithSameLetter,
-    solved,
-    markOneEmptyBlock,
-    inputLetter
-  }
-
-  enum crossed {
-    horizonthal,
-    vertical,
-    cornerUpLeft,
-    cornerUpRight,
-    cornerDownLeft,
-    cornerDownRight
-  }
-
-  function toKebabCase(str:string):string {
-    return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-  }
-
-
-  const labels = {
-    [UIMode.pick1stLetter]: "start entering a spell",
-    [UIMode.pick2ndLetter]: "keep picking letters",
-    [UIMode.pickRestOfLetters]: "keep picking letters",
-    [UIMode.pickOneBlock]: "pick a cell to black out",
-    [UIMode.pickTwoBlocks]: "pick 2 cells to black out",
-    [UIMode.pickTwoBlocks2nd]: "pick 2nd cell adjacent to previous",
-    [UIMode.blackenAllBlocksWithSameLetter]:
-      "pick a cell, all cells with same letter will be blackened out",
-    [UIMode.solved]: "You solved it! Well done!",
-    [UIMode.markOneEmptyBlock]: "Mark one empty block",
-    [UIMode.inputLetter]: "Input a letter into selected block",
-  } as { [key in UIMode]: string };
 
   const [mode, setMode] = createSignal(UIMode.pick1stLetter);
 
   const [customPuzzle, setCustomPuzzle] = createSignal<boolean>(false);
   const [puzzleText, setPuzzleText] = createSignal<string>('');
 
-  const spells = {
-    LOK: UIMode.pickOneBlock,
-    TLAK: UIMode.pickTwoBlocks,
-    TA: UIMode.blackenAllBlocksWithSameLetter,
-    BE: UIMode.markOneEmptyBlock,
-  } as {
-    [index: string]: UIMode;
-  };
 
   let lastPoint: Cell;
 
@@ -283,40 +320,6 @@ export function App() {
     setMode(UIMode.pick1stLetter);
     setSpell("");
   }
-
-  const defaultStore = [
-    { num: 1, puzzle: "**\n**" },
-    { num: 2, puzzle: "KOL\n _" },
-    { num: 3, puzzle: "LKOL\nO  _\nK  _" },
-    { num: 4, puzzle: "_K\nLOK\nOL\nK" },
-    { num: 5, puzzle: "  L\n  O\n K_\nLOOK_\n L_\n  K" },
-    { num: 6, puzzle: "OLKOLKOK" },
-    { num: 7, puzzle: "K\nO_L_O_K\nKLOKO_L\nL" },
-    { num: 8, puzzle: "LOL\nO_O\nKOLOK\n  O\n  K" },
-    { num: 9, puzzle: "TLTLAKAK\n___\n_" },
-    { num: 10, puzzle: "  _ T\n  K L\n  A _\nKOL___L\n  T A\n    K" },
-    { num: 11, puzzle: "KTL\nLLK\nOAO_\nLKK_" },
-    { num: 12, puzzle: "  K\n __\nTLOAK\nKOL_\n KL" },
-    { num: 13, puzzle: " LOK\nTL_AK\n_KAL_T\nK___OL" },
-    { num: 14, puzzle: " _\n TT\nTLL\nLAA\nAKK\nKOL\n _" },
-    { num: 15, puzzle: " _K\nKALLT\nK_O_O_L\n LOK\n  L" },
-    { num: 16, puzzle: "  K\n  O_L\n  LOK\nTLAKOOK\n  L K" },
-    { num: 17, puzzle: "L      L\nTTLLAAKK\nOLOKOAKO\nK K K  K" },
-    { num: 18, puzzle: "TA\nUUU\nUUU" },
-    { num: 19, puzzle: " HHH\nTGTGA\n GAG" },
-    { num: 20, puzzle: "SALASOK\n   T" },
-    { num: 21, puzzle: "TE_A\nDT_A\nDETA\n" },
-    { num: 23, puzzle: "  TL\n  LO\nTLTAAK\n  AK\n  K" },
-    { num: 24, puzzle: "T_T_LAK\n_______\nTLALOK" },
-    { num: 25, puzzle: "   T\n  FLZD\nTLZAAK\n LOK\n" },
-    { num: 26, puzzle: "TLATLAKK\n   LOK\n   KALT" },
-    { num: 27, puzzle: "MJKKJ\nLOTAK\n DAAD\n  LLJ\n  TTD\n  M" },
-    { num: 28, puzzle: "LOXK" },
-    { num: 29, puzzle: "TLX\nKAX" },
-    { num: 30, puzzle: "L K\nXOXOK\n  L" },
-    { num: 32, puzzle: "  TX\nXK_L_T\nAXAX" },
-    { num: 33, puzzle: "    K\n TAKA\nX__AX\nLTLX\nT" },
-  ];
 
   const [storage, setStorage] = createSignal(
     JSON.parse(localStorage["LOKstorage"] ?? JSON.stringify(defaultStore)) as {
