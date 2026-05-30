@@ -1,8 +1,7 @@
 {
   "name": "LOK",
-  "packageManager": "yarn@4.0.1",
   "scripts": {
-    "build": "node ./cfg/build.js"
+    "build": "bun run cfg/build.js"
   },
   "dependencies": {
     "babel-preset-solid": "^1.8.0",
