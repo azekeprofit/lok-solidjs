@@ -36,8 +36,12 @@ enum crossed {
   cornerDownRight
 }
 
+interface puzzleTask {
+  num: number;
+  puzzle: string;
+}
 
-const defaultStore = [
+const defaultStore: puzzleTask[] = [
   { num: 1, puzzle: "**\n**" },
   { num: 2, puzzle: "KOL\n _" },
   { num: 3, puzzle: "LKOL\nO  _\nK  _" },
@@ -71,12 +75,12 @@ const defaultStore = [
   { num: 33, puzzle: "    K\n TAKA\nX__AX\nLTLX\nT" },
 ];
 
-function toKebabCase(str:string):string {
+function toKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 }
 
 
-const labels:Record<UIMode, string> = {
+const labels: Record<UIMode, string> = {
   [UIMode.pick1stLetter]: "start entering a spell",
   [UIMode.pick2ndLetter]: "keep picking letters",
   [UIMode.pickRestOfLetters]: "keep picking letters",
@@ -91,7 +95,8 @@ const labels:Record<UIMode, string> = {
 };
 
 type spell = 'LOK' | 'TLAK' | 'TA' | 'BE';
-const spells:Record<spell,UIMode> = {
+
+const spells: Record<spell, UIMode> = {
   LOK: UIMode.pickOneBlock,
   TLAK: UIMode.pickTwoBlocks,
   TA: UIMode.blackenAllBlocksWithSameLetter,
@@ -99,8 +104,6 @@ const spells:Record<spell,UIMode> = {
 };
 
 export function App() {
-
-
   const [mode, setMode] = createSignal(UIMode.pick1stLetter);
 
   const [customPuzzle, setCustomPuzzle] = createSignal<boolean>(false);
@@ -122,7 +125,7 @@ export function App() {
 
     constructor(content: string, x: number, y: number) {
       this.content = content;
-      this.noCell = content == " ";
+      this.noCell = content == " " || content == "_";
       switch (content) {
         case "*":
           this.blackened = true;
@@ -142,7 +145,7 @@ export function App() {
   let maxRow = 0;
   const [board, setBoard] = createStore<Cell[][]>([]);
 
-  let select: HTMLSelectElement;
+  const [puzzleIndex, setPuzzleIndex] = createSignal(0);
 
   let spellDirection = direction.noDirection;
 
@@ -300,7 +303,7 @@ export function App() {
         blackened: cell.blackened,
       }} onClick={[click, cell]}>
         <Show when={!cell.beingMarked}>{cell.content}</Show>
-        <Show when={cell.beingMarked}><input ref={el=>input=el} autofocus onkeypress={e => { if (e.keyCode == 13) endInputting(cell) }} onBlur={[endInputting, cell]}></input></Show>
+        <Show when={cell.beingMarked}><input ref={el => input = el} autofocus onkeypress={e => { if (e.key == 'Enter') endInputting(cell) }} onBlur={[endInputting, cell]}></input></Show>
       </td>
     );
   };
@@ -322,10 +325,7 @@ export function App() {
   }
 
   const [storage, setStorage] = createSignal(
-    JSON.parse(localStorage["LOKstorage"] ?? JSON.stringify(defaultStore)) as {
-      num: number;
-      puzzle: string;
-    }[]
+    JSON.parse(localStorage["LOKstorage"] ?? JSON.stringify(defaultStore)) as puzzleTask[]
   );
 
   function save() {
@@ -342,22 +342,20 @@ export function App() {
       newStorage.sort((a, b) => a.num - b.num);
       setStorage(newStorage);
       localStorage["LOKstorage"] = JSON.stringify(newStorage);
-      loadPuzzle(num.toString());
+      lokify(puzzleText())
     }
   }
 
-  function loadPuzzle(num: string) {
-    for (let p of storage()) {
-      if (p.num == parseInt(num)) {
-        setPuzzleText(p.puzzle);
-        select.value = num;
-        lokify(p.puzzle);
-        return;
-      }
+  function loadTask(index: number) {
+    if (index != -1) {
+      setPuzzleIndex(index);
+      const { puzzle } = storage()[index];
+      setPuzzleText(puzzle);
+      lokify(puzzle);
     }
   }
 
-  createEffect(() => loadPuzzle('2'));
+  createEffect(() => loadTask(1));
 
   return (
     <>
@@ -369,7 +367,7 @@ export function App() {
       <p>
         <Show when={storage().length > 0}>
           <label>Enter puzzle number:
-            <select ref={el=>select=el} onChange={(e) => loadPuzzle(select.value)}>
+            <select value={storage()[puzzleIndex()].num} onChange={e => loadTask(storage().findIndex(s => s.num.toString() === e.target.value))}>
               <For each={storage()}>
                 {({ num }) => <option value={num}>{num}</option>}
               </For>
@@ -377,13 +375,14 @@ export function App() {
         </Show>
       </p>
       <Show when={customPuzzle()}>
-        <textarea cols="20" rows="6" value={puzzleText()} onInput={e => setPuzzleText(e.currentTarget.value)}
-        >{`KOL\n _`}</textarea>
+        <textarea cols="20" rows="6" value={puzzleText()} onInput={e => setPuzzleText(e.currentTarget.value)} />
       </Show>
 
       <Show when={!customPuzzle()}>
+        <p>{labels[mode()]}
+          <Show when={mode() == UIMode.solved}><button disabled={storage()[puzzleIndex() + 1] == null} onClick={() => loadTask(puzzleIndex() + 1)}>Next puzzle</button></Show>
+        </p>
 
-        <p>{labels[mode()]}</p>
         <table>
           <For each={board}>
             {(line) => (
@@ -408,4 +407,4 @@ export function App() {
   );
 }
 
-render(()=><App />, document.body);
+render(() => <App />, document.body);
