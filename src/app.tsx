@@ -49,7 +49,7 @@ const defaultStore: puzzleTask[] = [
   { num: 5, puzzle: "  L\n  O\n K_\nLOOK_\n L_\n  K" },
   { num: 6, puzzle: "OLKOLKOK" },
   { num: 7, puzzle: "K\nO_L_O_K\nKLOKO_L\nL" },
-  { num: 8, puzzle: "LOL\nO_O\nKOLOK\n  O\n  K" },
+  { num: 8, puzzle: "LOL\nO O\nKOLOK\n  O\n  K" },
   { num: 9, puzzle: "TLTLAKAK\n___\n_" },
   { num: 10, puzzle: "  _ T\n  K L\n  A _\nKOL___L\n  T A\n    K" },
   { num: 11, puzzle: "KTL\nLLK\nOAO_\nLKK_" },
@@ -125,7 +125,7 @@ export function App() {
 
     constructor(content: string, x: number, y: number) {
       this.content = content;
-      this.noCell = content == " " || content == "_";
+      this.noCell = content == " ";
       switch (content) {
         case "*":
           this.blackened = true;
@@ -280,7 +280,7 @@ export function App() {
           setBoard(cell.y, cell.x, "beingMarked", true);
       }
 
-      if (mode() == UIMode.pick1stLetter && board.every((line) => line.every((cell) => cell.blackened || cell.noCell)))
+      if (mode() == UIMode.pick1stLetter && board.every((line) => line.every((cell) => cell.blackened || cell.noCell || cell.emptyCell)))
         setMode(UIMode.solved);
     }
 
@@ -301,6 +301,7 @@ export function App() {
         cell: true,
         hasContent: !cell.noCell,
         blackened: cell.blackened,
+        empty: cell.noCell,
       }} onClick={[click, cell]}>
         <Show when={!cell.beingMarked}>{cell.content}</Show>
         <Show when={cell.beingMarked}><input ref={el => input = el} autofocus onkeypress={e => { if (e.key == 'Enter') endInputting(cell) }} onBlur={[endInputting, cell]}></input></Show>
@@ -383,7 +384,7 @@ export function App() {
           <Show when={mode() == UIMode.solved}><button disabled={storage()[puzzleIndex() + 1] == null} onClick={() => loadTask(puzzleIndex() + 1)}>Next puzzle</button></Show>
         </p>
 
-        <table>
+        <table class='empty'>
           <For each={board}>
             {(line) => (
               <tr>
